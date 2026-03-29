@@ -244,7 +244,7 @@ export default function GenerationViewer({ generation }: { generation: Generatio
             </div>
             <p className="text-xs text-gray-400">
               This preview simulates how your generated app would look once deployed.
-              The full React + Vite + Express stack is available in the "Download ZIP" option.
+              The full React + Vite + Express stack is available in the &quot;Download ZIP&quot; option.
             </p>
           </div>
         </div>

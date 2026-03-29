@@ -8,7 +8,7 @@ const CredentialsSchema = z.object({
   password: z.string().min(6),
 });
 
-export const authConfig = {
+export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -27,6 +27,11 @@ export const authConfig = {
       },
       async authorize(credentials) {
         // This will be overridden in auth.ts because bcrypt is not Edge-safe
+        // We keep this minimal here for Edge compatibility
+        const parsed = CredentialsSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+        
+        // Return null to let auth.ts handle the actual authorization
         return null;
       },
     }),
@@ -45,4 +50,4 @@ export const authConfig = {
       return session;
     },
   },
-} satisfies NextAuthConfig;
+};

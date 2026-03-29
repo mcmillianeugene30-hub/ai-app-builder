@@ -13,7 +13,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers: [
-    ...authConfig.providers.filter(p => p.id !== "credentials"),
+    // Filter out credentials provider from auth.config since we add our own with bcrypt
+    ...authConfig.providers.filter(p => {
+      // Type-safe filter - check if this is the credentials provider
+      const anyP = p as any;
+      return anyP.id !== "credentials" && anyP.name !== "credentials";
+    }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -23,10 +28,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({ where: { email: credentials.email as string } });
+        const user = await prisma.user.findUnique({ 
+          where: { email: credentials.email as string } 
+        });
+        
         if (!user || !user.passwordHash) return null;
 
-        const valid = await bcrypt.compare(credentials.password as string, user.passwordHash);
+        const valid = await bcrypt.compare(
+          credentials.password as string, 
+          user.passwordHash
+        );
+        
         if (!valid) return null;
 
         return { id: user.id, email: user.email, name: user.name };

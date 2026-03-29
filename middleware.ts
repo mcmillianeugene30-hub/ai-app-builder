@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
@@ -10,7 +11,7 @@ const AUTH_PAGES = ["/login", "/signup"];
 // Explicitly use Node.js runtime to avoid Edge Runtime compatibility issues
 export const runtime = "nodejs";
 
-export default auth((req) => {
+export default auth((req: NextRequest & { auth?: any }) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const isProtected = PROTECTED_PREFIXES.some(p => nextUrl.pathname.startsWith(p));

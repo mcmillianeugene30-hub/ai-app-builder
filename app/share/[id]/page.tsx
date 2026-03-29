@@ -217,7 +217,7 @@ export default async function SharePage({ params }: Props) {
                   ["📦", "Download as ZIP", "All files, ready to npm install & run"],
                   ["♾️", "Yours to keep", "No license, no lock-in, full source code"],
                 ].map(([icon, title, sub]) => (
-                  <div key={title} className="flex items-start gap-3">
+                  <div key={title as string} className="flex items-start gap-3">
                     <span className="text-xl">{icon}</span>
                     <div>
                       <div className="text-sm font-medium text-gray-800">{title}</div>

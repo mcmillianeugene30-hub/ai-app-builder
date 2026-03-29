@@ -28,6 +28,9 @@ model User {
   transactions     Transaction[]
   generations      Generation[]
   sharedProjects   ProjectMember[]
+
+  @@index([email])
+  @@index([stripeCustomerId])
 }
 
 enum UserRole {
@@ -52,6 +55,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -61,6 +65,8 @@ model Session {
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -78,6 +84,8 @@ model UserCredits {
   lastUpdated DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Transaction {
@@ -92,6 +100,9 @@ model Transaction {
   createdAt              DateTime          @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Template {
@@ -102,6 +113,8 @@ model Template {
   category    String
   isPublic    Boolean  @default(true)
   createdAt   DateTime @default(now())
+
+  @@index([category])
 }
 
 model Generation {
@@ -120,6 +133,11 @@ model Generation {
 
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   collaborators  ProjectMember[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([isPublic])
 }
 
 model ProjectMember {
@@ -132,6 +150,8 @@ model ProjectMember {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([generationId, userId])
+  @@index([generationId])
+  @@index([userId])
 }
 
 model Analytics {
@@ -140,6 +160,10 @@ model Analytics {
   userId    String?
   metadata  Json?
   createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+  @@index([userId])
 }
 
 enum TransactionType {
