@@ -18,6 +18,7 @@ model User {
   image            String?
   passwordHash     String?
   stripeCustomerId String?       @unique
+  role             UserRole      @default(USER)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -26,6 +27,12 @@ model User {
   credits          UserCredits?
   transactions     Transaction[]
   generations      Generation[]
+  sharedProjects   ProjectMember[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Account {
@@ -87,18 +94,52 @@ model Transaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Template {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  prompt      String   @db.Text
+  category    String
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
 model Generation {
   id             String   @id @default(cuid())
   userId         String
   prompt         String   @db.Text
+  modelId        String?  // Added for AI Model Selection
   creditsUsed    Int
   status         GenerationStatus @default(PENDING)
   generatedFiles Json?            // array of { path: string, content: string }
   errorMessage   String?
+  isPublic       Boolean  @default(false) // For Enhanced Share Links
+  customDomain   String?  @unique         // For Custom Domains
   createdAt      DateTime @default(now())
   completedAt    DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collaborators  ProjectMember[]
+}
+
+model ProjectMember {
+  id           String     @id @default(cuid())
+  generationId String
+  userId       String
+  role         String     @default("viewer") // viewer, editor
+
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([generationId, userId])
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  event     String
+  userId    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
 }
 
 enum TransactionType {

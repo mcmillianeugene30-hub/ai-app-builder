@@ -8,6 +8,7 @@ interface UserDetail {
   id: string;
   email: string;
   name: string | null;
+  role: string;
   createdAt: string;
   balance: number;
   totalGenerations: number;
@@ -59,6 +60,7 @@ export default function AdminUserDetailPage() {
   const [user, setUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingRole, setUpdatingRole] = useState(false);
 
   // Credit adjustment form state
   const [delta, setDelta] = useState("");
@@ -79,6 +81,20 @@ export default function AdminUserDetailPage() {
         setLoading(false);
       });
   }, [id]);
+
+  async function handleUpdateRole(newRole: string) {
+    if (!user || user.role === newRole) return;
+    setUpdatingRole(true);
+    const res = await fetch(`/api/admin/users/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: newRole }),
+    });
+    if (res.ok) {
+      setUser({ ...user, role: newRole });
+    }
+    setUpdatingRole(false);
+  }
 
   async function handleAdjust(e: React.FormEvent) {
     e.preventDefault();
@@ -138,7 +154,18 @@ export default function AdminUserDetailPage() {
             <span>›</span>
             <span className="text-gray-900 font-medium">{user.name ?? user.email}</span>
           </div>
-          <h1 className="text-2xl font-bold">{user.name ?? user.email}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{user.name ?? user.email}</h1>
+            <select
+              value={user.role}
+              disabled={updatingRole}
+              onChange={(e) => handleUpdateRole(e.target.value)}
+              className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
           {user.name && <p className="text-gray-500 text-sm">{user.email}</p>}
         </div>
       </div>

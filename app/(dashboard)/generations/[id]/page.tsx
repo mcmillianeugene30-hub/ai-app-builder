@@ -30,6 +30,7 @@ export default async function GenerationPage({ params }: { params: Promise<{ id:
         createdAt: generation.createdAt.toISOString(),
         errorMessage: generation.errorMessage,
         files,
+        customDomain: generation.customDomain,
       }}
     />
   );

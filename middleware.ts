@@ -1,6 +1,8 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 const PROTECTED_PREFIXES = ["/dashboard", "/generate", "/generations", "/credits", "/templates", "/admin"];
 const AUTH_PAGES = ["/login", "/signup"];
@@ -15,6 +17,13 @@ export default auth((req) => {
     const loginUrl = new URL("/login", nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (nextUrl.pathname.startsWith("/admin")) {
+    const role = (req.auth?.user as any)?.role;
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard", nextUrl.origin));
+    }
   }
 
   if (isAuthPage && isLoggedIn) {

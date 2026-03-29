@@ -31,6 +31,7 @@ function GenerateForm() {
   const searchParams = useSearchParams();
 
   const [prompt, setPrompt] = useState(searchParams.get("prompt") ?? "");
+  const [modelId, setModelId] = useState("default");
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -62,7 +63,7 @@ function GenerateForm() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim() }),
+        body: JSON.stringify({ prompt: prompt.trim(), modelId: modelId === "default" ? undefined : modelId }),
       });
 
       // Non-streaming errors (auth, validation)
@@ -202,6 +203,32 @@ function GenerateForm() {
       {/* Prompt form (hidden while loading) */}
       {!loading && (
         <form onSubmit={handleGenerate} className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700 px-1">AI Model</label>
+            <div className="flex gap-2">
+              {[
+                { id: "default", label: "Auto (Fastest)", icon: "✨" },
+                { id: "openrouter", label: "Llama 3.1", icon: "🦙" },
+                { id: "gemini", label: "Gemini 1.5", icon: "♊" },
+                { id: "groq", label: "Mixtral", icon: "🌪️" },
+              ].map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setModelId(m.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium border transition-all ${
+                    modelId === m.id
+                      ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <span>{m.icon}</span>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="card p-1">
             <textarea
               value={prompt}

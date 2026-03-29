@@ -12,6 +12,7 @@ export const maxDuration = 60;
 
 const GenerateSchema = z.object({
   prompt: z.string().min(10, "Prompt must be at least 10 characters").max(2000),
+  modelId: z.string().optional(),
 });
 
 const CREDITS_REQUIRED = parseInt(process.env.CREDITS_PER_GENERATION ?? "5");
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return Response.json({ error: parsed.error.errors[0].message }, { status: 400 });
   }
-  const { prompt } = parsed.data;
+  const { prompt, modelId } = parsed.data;
 
   // SSE stream for the generation pipeline
   const encoder = new TextEncoder();
@@ -64,6 +65,23 @@ export async function POST(req: Request) {
       let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
       try {
+        send({ type: "progress", stage: "checking", message: "Checking rate limits…", pct: 5 });
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const recentGens = await prisma.generation.count({
+          where: { userId, createdAt: { gte: fiveMinutesAgo } },
+        });
+        if (recentGens >= 3) {
+          throw new Error("Rate limit exceeded. Please wait a few minutes.");
+        }
+
+        await prisma.analytics.create({
+          data: {
+            event: "GENERATION_STARTED",
+            userId,
+            metadata: { prompt: prompt.slice(0, 50), modelId },
+          },
+        });
+
         // Stage 1: Credit check
         send({ type: "progress", stage: "checking", message: "Checking your credit balance…", pct: 8 });
         await checkCredits(userId, CREDITS_REQUIRED);
@@ -71,7 +89,7 @@ export async function POST(req: Request) {
         // Stage 2: Create DB record
         send({ type: "progress", stage: "preparing", message: "Preparing generation…", pct: 18 });
         const generation = await prisma.generation.create({
-          data: { userId, prompt, creditsUsed: CREDITS_REQUIRED, status: "GENERATING" },
+          data: { userId, prompt, creditsUsed: CREDITS_REQUIRED, status: "GENERATING", modelId },
         });
         generationId = generation.id;
 
@@ -85,7 +103,7 @@ export async function POST(req: Request) {
 
         // Heartbeat every 8s during AI call so the connection stays alive
         heartbeatTimer = setInterval(ping, 8000);
-        const aiResponse = await generateApp(prompt);
+        const aiResponse = await generateApp(prompt, modelId);
         clearInterval(heartbeatTimer);
         heartbeatTimer = null;
 
@@ -97,7 +115,15 @@ export async function POST(req: Request) {
         send({ type: "progress", stage: "saving", message: "Saving your app…", pct: 94 });
         await prisma.generation.update({
           where: { id: generationId },
-          data: { status: "COMPLETED", generatedFiles: files as Prisma.InputJsonValue, completedAt: new Date() },
+          data: { status: "COMPLETED", generatedFiles: files as any, completedAt: new Date() },
+        });
+
+        await prisma.analytics.create({
+          data: {
+            event: "GENERATION_COMPLETED",
+            userId,
+            metadata: { generationId, filesCount: files.length, provider: aiResponse.provider },
+          },
         });
 
         send({ type: "progress", stage: "done", message: "App ready!", pct: 100 });
