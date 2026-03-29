@@ -5,6 +5,7 @@ import { parseGeneratedCode } from "@/lib/code-parser";
 import { prisma } from "@/lib/db/prisma";
 import { sendGenerationComplete, sendGenerationFailed } from "@/lib/email";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 // Vercel hobby plan max: 60s. Pro plan allows up to 300s.
 export const maxDuration = 60;
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
         send({ type: "progress", stage: "saving", message: "Saving your app…", pct: 94 });
         await prisma.generation.update({
           where: { id: generationId },
-          data: { status: "COMPLETED", generatedFiles: files, completedAt: new Date() },
+          data: { status: "COMPLETED", generatedFiles: files as Prisma.InputJsonValue, completedAt: new Date() },
         });
 
         send({ type: "progress", stage: "done", message: "App ready!", pct: 100 });
