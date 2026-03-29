@@ -2,9 +2,12 @@
   "name": "appbuilder-saas",
   "version": "1.0.0",
   "private": true,
+  "overrides": {
+    "glob": "^11.0.0"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
