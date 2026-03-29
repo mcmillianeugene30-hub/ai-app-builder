@@ -5,6 +5,9 @@ import { prisma } from "@/lib/db/prisma";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 
+// Explicitly use Node.js runtime for auth to avoid Edge compatibility issues
+export const runtime = "nodejs";
+
 // The full config for Node.js runtime
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,

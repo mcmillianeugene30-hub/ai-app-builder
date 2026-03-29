@@ -7,6 +7,9 @@ const { auth } = NextAuth(authConfig);
 const PROTECTED_PREFIXES = ["/dashboard", "/generate", "/generations", "/credits", "/templates", "/admin"];
 const AUTH_PAGES = ["/login", "/signup"];
 
+// Explicitly use Node.js runtime to avoid Edge Runtime compatibility issues
+export const runtime = "nodejs";
+
 export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
