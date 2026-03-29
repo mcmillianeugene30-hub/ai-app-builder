@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const userId = session.user.id;
   const userEmail = session.user.email ?? "";
 
-  let body: { prompt: string };
+  let body: { prompt: string; modelId?: string };
   try {
     body = await req.json();
   } catch {
