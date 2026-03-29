@@ -2,9 +2,21 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { getCreditBalance } from "@/lib/credits/manager";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-
 export const metadata = { title: "Dashboard" };
+
+function timeAgo(date: Date): string {
+  const secs = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo`;
+  return `${Math.floor(months / 12)}y`;
+}
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -97,7 +109,7 @@ export default async function DashboardPage() {
                   }`} />
                   <div>
                     <div className="text-sm font-medium line-clamp-1">{gen.prompt}</div>
-                    <div className="text-xs text-gray-400">{formatDistanceToNow(gen.createdAt)} ago · {gen.creditsUsed} credits</div>
+                    <div className="text-xs text-gray-400">{timeAgo(gen.createdAt)} ago · {gen.creditsUsed} credits</div>
                   </div>
                 </div>
                 <span className="text-gray-400 text-sm">→</span>
