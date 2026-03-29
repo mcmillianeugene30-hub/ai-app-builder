@@ -25,8 +25,18 @@ User request: `;
  * Route AI generation requests through providers with automatic fallback.
  * Order: OpenRouter → Gemini → Groq
  */
-export async function generateApp(userPrompt: string): Promise<AIResponse> {
+export async function generateApp(userPrompt: string, modelId?: string): Promise<AIResponse> {
   const fullPrompt = GENERATION_META_PROMPT + userPrompt;
+  
+  if (modelId === "gemini") {
+    return generateWithGemini(fullPrompt);
+  } else if (modelId === "groq") {
+    return generateWithGroq(fullPrompt);
+  } else if (modelId === "openrouter") {
+    return generateWithOpenRouter(fullPrompt);
+  }
+
+  // Default fallback chain
   const providers = [
     { name: "OpenRouter", fn: () => generateWithOpenRouter(fullPrompt) },
     { name: "Gemini", fn: () => generateWithGemini(fullPrompt) },

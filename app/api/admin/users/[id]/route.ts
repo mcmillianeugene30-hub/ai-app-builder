@@ -2,19 +2,13 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { NextResponse } from "next/server";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-
-async function assertAdmin(): Promise<boolean> {
-  const session = await auth();
-  return !!(session?.user?.email && session.user.email === ADMIN_EMAIL);
-}
-
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await assertAdmin())) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const session = await auth();
+  if ((session?.user as any)?.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -22,30 +16,20 @@ export async function GET(
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
-      credits: { select: { balance: true } },
+      credits: true,
       generations: {
         orderBy: { createdAt: "desc" },
-        take: 20,
-        select: {
-          id: true,
-          prompt: true,
-          status: true,
-          creditsUsed: true,
-          createdAt: true,
-        },
+        take: 50,
       },
       transactions: {
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 50,
+      },
+      _count: {
         select: {
-          id: true,
-          amount: true,
-          type: true,
-          description: true,
-          createdAt: true,
+          generations: true,
         },
       },
-      _count: { select: { generations: true } },
     },
   });
 
@@ -57,7 +41,7 @@ export async function GET(
     where: { userId: id, status: "COMPLETED" },
   });
 
-  const totalSpentAgg = await prisma.transaction.aggregate({
+  const totalSpent = await prisma.transaction.aggregate({
     where: { userId: id, type: "USAGE" },
     _sum: { amount: true },
   });
@@ -66,18 +50,37 @@ export async function GET(
     id: user.id,
     email: user.email,
     name: user.name,
-    createdAt: user.createdAt.toISOString(),
+    role: user.role,
+    createdAt: user.createdAt,
     balance: user.credits?.balance ?? 0,
     totalGenerations: user._count.generations,
     completedGenerations,
-    totalSpent: Math.abs(totalSpentAgg._sum.amount ?? 0),
-    generations: user.generations.map(g => ({
-      ...g,
-      createdAt: g.createdAt.toISOString(),
-    })),
-    transactions: user.transactions.map(t => ({
-      ...t,
-      createdAt: t.createdAt.toISOString(),
-    })),
+    totalSpent: Math.abs(totalSpent._sum.amount ?? 0),
+    generations: user.generations,
+    transactions: user.transactions,
   });
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if ((session?.user as any)?.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const { role } = await req.json();
+
+  if (!role || (role !== "USER" && role !== "ADMIN")) {
+    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+
+  const user = await prisma.user.update({
+    where: { id },
+    data: { role },
+  });
+
+  return NextResponse.json({ role: user.role });
 }

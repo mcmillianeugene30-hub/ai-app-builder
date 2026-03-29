@@ -1,28 +1,16 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import Google from "next-auth/providers/google";
-import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
-import { z } from "zod";
+import { authConfig } from "./auth.config";
+import Credentials from "next-auth/providers/credentials";
 
-const CredentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
+// The full config for Node.js runtime
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
   providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-    }),
+    ...authConfig.providers.filter(p => p.id !== "credentials"),
     Credentials({
       name: "credentials",
       credentials: {
@@ -30,30 +18,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = CredentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        if (!credentials?.email || !credentials?.password) return null;
 
-        const { email, password } = parsed.data;
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { email: credentials.email as string } });
         if (!user || !user.passwordHash) return null;
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
+        const valid = await bcrypt.compare(credentials.password as string, user.passwordHash);
         if (!valid) return null;
 
         return { id: user.id, email: user.email, name: user.name };
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) token.id = user.id;
-      return token;
-    },
-    async session({ session, token }) {
-      if (token.id) session.user.id = token.id as string;
-      return session;
-    },
-  },
   events: {
     async createUser({ user }) {
       // Initialize credit balance at 0 for new users

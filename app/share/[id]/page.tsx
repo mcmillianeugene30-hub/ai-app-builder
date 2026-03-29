@@ -33,6 +33,7 @@ export default async function SharePage({ params }: Props) {
       id: true,
       prompt: true,
       status: true,
+      modelId: true,
       creditsUsed: true,
       createdAt: true,
       generatedFiles: true,
@@ -109,6 +110,11 @@ export default async function SharePage({ params }: Props) {
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                   {files.length} files
                 </span>
+                {generation.modelId && (
+                  <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                    🤖 {generation.modelId}
+                  </span>
+                )}
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                   {generation.creditsUsed} credits
                 </span>
@@ -120,6 +126,32 @@ export default async function SharePage({ params }: Props) {
                 &ldquo;{generation.prompt}&rdquo;
               </h1>
             </div>
+          </div>
+        </div>
+
+        {/* Preview Section */}
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b bg-gray-50 flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-sm text-gray-700 text-left">App Preview</h2>
+              <p className="text-xs text-gray-400 mt-0.5 text-left">Interactive simulation of the generated UI</p>
+            </div>
+            <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Simulation</span>
+          </div>
+          <div className="aspect-video bg-gray-100 flex flex-col items-center justify-center p-8 text-center">
+             <div className="max-w-md space-y-4">
+                <div className="text-4xl">🌐</div>
+                <h3 className="text-lg font-bold text-gray-800">{generation.prompt.slice(0, 50)}...</h3>
+                <p className="text-sm text-gray-500">
+                  This is a live simulation of the generated React + Vite frontend. 
+                  In a production environment, this would be a sandbox running the actual code.
+                </p>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-left space-y-2">
+                   <div className="h-2 w-24 bg-gray-200 rounded-full"></div>
+                   <div className="h-2 w-full bg-gray-100 rounded-full"></div>
+                   <div className="h-2 w-3/4 bg-gray-100 rounded-full"></div>
+                </div>
+             </div>
           </div>
         </div>
 
