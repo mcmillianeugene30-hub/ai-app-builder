@@ -102,9 +102,10 @@ model Generation {
 }
 
 enum TransactionType {
-  PURCHASE   // credits bought
-  USAGE      // credits spent on generation
-  REFUND     // credits refunded due to failed generation
+  PURCHASE    // credits bought via Stripe
+  USAGE       // credits spent on generation
+  REFUND      // credits refunded due to failed generation
+  ADJUSTMENT  // manual admin credit adjustment
 }
 
 enum TransactionStatus {

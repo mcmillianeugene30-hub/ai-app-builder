@@ -23,6 +23,24 @@ export default function GenerationViewer({ generation }: { generation: Generatio
     generation.files[0] ?? null
   );
   const [downloading, setDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const url = `${window.location.origin}/share/${generation.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback for non-secure contexts
+      const el = document.createElement("textarea");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleDownload() {
     setDownloading(true);
@@ -87,6 +105,12 @@ export default function GenerationViewer({ generation }: { generation: Generatio
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">{generation.files.length} files · {generation.creditsUsed} credits</span>
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 border border-gray-300 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            {copied ? "✓ Copied!" : "🔗 Share"}
+          </button>
           <button
             onClick={handleDownload}
             disabled={downloading}

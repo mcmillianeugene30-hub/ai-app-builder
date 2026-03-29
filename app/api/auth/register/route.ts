@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
+import { sendWelcome } from "@/lib/email";
 import { z } from "zod";
 
 const RegisterSchema = z.object({
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
         credits: { create: { balance: 0 } }, // no free credits!
       },
     });
+
+    // Non-blocking welcome email
+    sendWelcome(user.email, user.name ?? undefined).catch(() => {});
 
     return NextResponse.json({ id: user.id, email: user.email }, { status: 201 });
   } catch (error) {

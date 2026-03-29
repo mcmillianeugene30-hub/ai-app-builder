@@ -3,6 +3,7 @@ import { checkCredits, deductCredits, refundCredits } from "@/lib/credits/manage
 import { generateApp } from "@/lib/ai-providers/router";
 import { parseGeneratedCode } from "@/lib/code-parser";
 import { prisma } from "@/lib/db/prisma";
+import { sendGenerationComplete, sendGenerationFailed } from "@/lib/email";
 import { z } from "zod";
 
 // Vercel hobby plan max: 60s. Pro plan allows up to 300s.
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   const userId = session.user.id;
+  const userEmail = session.user.email ?? "";
 
   let body: { prompt: string };
   try {
@@ -105,6 +107,11 @@ export async function POST(req: Request) {
           provider: aiResponse.provider,
           ...(parseError && { warning: parseError }),
         });
+
+        // Non-blocking email notification
+        if (userEmail) {
+          sendGenerationComplete(userEmail, prompt, generationId).catch(() => {});
+        }
       } catch (error) {
         if (heartbeatTimer) clearInterval(heartbeatTimer);
 
@@ -133,6 +140,11 @@ export async function POST(req: Request) {
           : creditDeducted
           ? "Generation failed. Your credits have been refunded."
           : message;
+
+        // Email notification for failures that consumed credits (non-blocking)
+        if (creditDeducted && userEmail) {
+          sendGenerationFailed(userEmail, prompt).catch(() => {});
+        }
 
         send({ type: "error", message: userMessage });
       } finally {
