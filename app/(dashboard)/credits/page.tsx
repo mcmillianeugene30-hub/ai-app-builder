@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CREDIT_PACKAGES } from "@/lib/stripe/client";
 
+// useSearchParams() requires a Suspense boundary in Next.js 15
 export default function CreditsPage() {
+  return (
+    <Suspense>
+      <CreditsContent />
+    </Suspense>
+  );
+}
+
+function CreditsContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const canceled = searchParams.get("canceled");

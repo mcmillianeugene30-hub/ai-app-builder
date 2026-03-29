@@ -5,12 +5,13 @@ import GenerationViewer from "@/components/GenerationViewer";
 
 export const metadata = { title: "View Generation" };
 
-export default async function GenerationPage({ params }: { params: { id: string } }) {
+export default async function GenerationPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   const userId = session!.user!.id!;
 
   const generation = await prisma.generation.findFirst({
-    where: { id: params.id, userId },
+    where: { id, userId },
   });
 
   if (!generation) notFound();

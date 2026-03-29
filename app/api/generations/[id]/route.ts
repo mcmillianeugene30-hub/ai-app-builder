@@ -4,15 +4,16 @@ import { prisma } from "@/lib/db/prisma";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const generation = await prisma.generation.findFirst({
-    where: { id: params.id, userId: session.user.id },
+    where: { id, userId: session.user.id },
   });
 
   if (!generation) {
