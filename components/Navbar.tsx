@@ -20,6 +20,7 @@ export default function Navbar() {
   const nav = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/generate", label: "Build App" },
+    { href: "/templates", label: "Templates" },
     { href: "/credits", label: "Buy Credits" },
   ];
 
