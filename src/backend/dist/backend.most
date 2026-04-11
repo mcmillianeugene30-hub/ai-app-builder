@@ -1,0 +1,53 @@
+// Version: 1.0.0
+type Architecture__919272560 =
+  {dataFlow : Text; systemDesign : Text; techStack : [Text]};
+type CodeSnippet__183015280 = {code : Text; filename : Text};
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type GenerationId__1065078601 = Nat;
+type Generation__390112757 =
+  {
+    architecture : Architecture__919272560;
+    codeSnippets : [CodeSnippet__183015280];
+    createdAt : Timestamp__301639476;
+    id : GenerationId__1065078601;
+    overview : Overview__960560156;
+    prompt : Text;
+    userId : UserId__158757552
+  };
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Overview__960560156 =
+  {concept : Text; keyFeatures : [Text]; targetUsers : Text};
+type Timestamp__301639476 = Int;
+type UserId__158757552 = Principal;
+type UserProfile__211413525 = {name : Text};
+type UserRole__1054455867 = {#admin; #guest; #user};
+actor {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  stable generations :
+    {
+      var root :
+        Node__46230540<GenerationId__1065078601, Generation__390112757>;
+      var size : Nat__490723111
+    };
+  stable nextId : {var value : GenerationId__1065078601};
+  stable userProfiles :
+    {
+      var root : Node__46230540<UserId__158757552, UserProfile__211413525>;
+      var size : Nat__490723111
+    }
+};

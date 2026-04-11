@@ -1,0 +1,94 @@
+type http_request_result = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type http_header = 
+ record {
+   name: text;
+   value: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = record {name: text;};
+type UserId = principal;
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: http_request_result;
+ };
+type Timestamp = int;
+type Overview = 
+ record {
+   concept: text;
+   keyFeatures: vec text;
+   targetUsers: text;
+ };
+type GenerationSummary = 
+ record {
+   createdAt: Timestamp;
+   id: GenerationId;
+   promptPreview: text;
+ };
+type GenerationResult = 
+ record {
+   architecture: Architecture;
+   codeSnippets: vec CodeSnippet;
+   overview: Overview;
+ };
+type GenerationId = nat;
+type Generation = 
+ record {
+   architecture: Architecture;
+   codeSnippets: vec CodeSnippet;
+   createdAt: Timestamp;
+   id: GenerationId;
+   overview: Overview;
+   prompt: text;
+   userId: UserId;
+ };
+type CodeSnippet = 
+ record {
+   code: text;
+   filename: text;
+ };
+type Architecture = 
+ record {
+   dataFlow: text;
+   systemDesign: text;
+   techStack: vec text;
+ };
+service : {
+  _initializeAccessControl: () -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  deleteGeneration: (id: GenerationId) -> (variant {
+                                             err: text;
+                                             ok;
+                                           });
+  generateApp: (prompt: text) -> (GenerationResult);
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getGeneration: (id: GenerationId) -> (opt Generation) query;
+  getMyGenerations: () -> (vec GenerationSummary) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  isCallerAdmin: () -> (bool) query;
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  saveGeneration: (prompt: text, overview: Overview, architecture:
+   Architecture, codeSnippets: vec CodeSnippet) ->
+   (variant {
+      err: text;
+      ok: GenerationId;
+    });
+  transform: (input: TransformationInput) -> (TransformationOutput) query;
+}

@@ -1,0 +1,21 @@
+{
+  "overview": "A full-stack AI-powered app builder where users describe their app idea in plain English and instantly get an architecture overview, tech stack recommendations, and sample code. Powered by Groq's free LLM API with user accounts to save and revisit past generations.",
+  "features": [
+    "Natural language prompt to app generation",
+    "AI-generated architecture overview and code snippets",
+    "Tabbed result display (Overview, Architecture, Code Preview)",
+    "Save and browse past app generations",
+    "Deployment instructions for Internet Computer",
+    "User accounts via Internet Identity"
+  ],
+  "category": "productivity",
+  "tags": [
+    "ai",
+    "app-builder",
+    "code-generation",
+    "full-stack",
+    "groq",
+    "internet-computer"
+  ],
+  "last_updated": "2026-04-11T07:16:33.034Z"
+}
